@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Original PNG card images (use JPEG versions instead)
+public/cards/*.png
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
