@@ -94,15 +94,25 @@ async def websocket_endpoint(websocket: WebSocket):
                 if room.guest is None:
                     await _send(websocket, {"type": "error", "message": "Need two players to start"})
                     continue
+                from app.game.engine import ClassicGameEngine
                 room.status = RoomStatus.IN_GAME
-                # TODO: initialize game engine and deal cards
+                engine = ClassicGameEngine(room.code)
+                room.engine = engine
+                states = engine.start_game([room.host.id, room.guest.id])
                 for p in [room.host, room.guest]:
-                    await _send(p.websocket, {"type": "game_started"})
+                    await _send(p.websocket, {"type": "game_started", **states[p.id]})
 
             # ── play_card ────────────────────────────────────────────────
             elif msg_type == "play_card":
-                # TODO: forward to game engine, broadcast updated game_state
-                await _send(websocket, {"type": "error", "message": "Game logic not implemented yet"})
+                if room is None or player is None or room.engine is None:
+                    await _send(websocket, {"type": "error", "message": "No active game"})
+                    continue
+                result = room.engine.play_card(player.id, data["card"])
+                if "error" in result:
+                    await _send(websocket, {"type": "error", "message": result["error"]})
+                    continue
+                for p in [room.host, room.guest]:
+                    await _send(p.websocket, result[p.id])
 
             else:
                 await _send(websocket, {"type": "error", "message": f"Unknown message type: {msg_type}"})
