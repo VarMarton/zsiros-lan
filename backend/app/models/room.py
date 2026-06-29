@@ -29,5 +29,5 @@ class Room:
     status: RoomStatus = RoomStatus.LOBBY
     host: Optional[Player] = None
     guest: Optional[Player] = None
-    # pending join request waiting for host approval
     pending_guest: Optional[Player] = None
+    engine: Optional[object] = field(default=None, repr=False)
